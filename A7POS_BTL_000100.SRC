@@ -1,0 +1,29 @@
+SPR "A7POS_BTL_000100"
+C -- Versionsnummer x.xxxx               --
+C -- 1.0000
+C --                                     --
+C -- AUTO                                --
+C --                                     --
+C -----------------------------------------
+C 
+C >> Diesen Wert an der Bauteilkante einmessen <<
+C -- Lage-Offset des Bauteils ----------
+KOPIERE Quelle:1457.0000,Ziel_Var:RBauteilOffset
+C -- alle mit 0 vorbesetzen -------
+KOPIERE Quelle:0.0,Ziel_Var:RA7Pos_L[*]
+C 
+C -- wenn RobOffice dann Werte fuer ProVis laden
+C -- Positionen im ProVis --------
+C 
+C 
+C ---------------------------------------------
+MARKE "Ende"
+C -- Ref-Pos des Bauteils ---
+KOPIERE Quelle:673.0500,Ziel_Var:VREF_POS_Auto.X
+KOPIERE Quelle:9778.4400,Ziel_Var:VREF_POS_Auto.Y
+KOPIERE Quelle:19.1100,Ziel_Var:VREF_POS_Auto.Z
+KOPIERE Quelle:9778.4400,Ziel_Var:VREF_POS_Auto.A7
+KOPIERE Quelle:0.0000,Ziel_Var:RNullPunkt_X
+KOPIERE Quelle:0.0000,Ziel_Var:RNullPunkt_Y
+KOPIERE Quelle:0.0000,Ziel_Var:RNullPunkt_Z
+END

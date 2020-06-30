@@ -1,0 +1,584 @@
+SPR "I_NAHT"
+C -- Versionsnummer x.xxxx               --
+C -- 1.0000
+C --                                     --
+C -- I-Naht Auto                         --
+C --                                     --
+C -- Bearbeiter, Datum: Beschreibung     --
+C -- AT, 23.06.16: Neuerstellung         --
+C -----------------------------------------
+LOK_VAR Name:P_UebergabeHomePos
+LOK_VAR Name:I_Temp
+LOK_VAR Name:I_Temp2
+LOK_VAR Name:I_Nahtlaenge
+LOK_VAR Name:I_Laenge
+LOK_VAR Name:I_VStart_A7Offset
+LOK_VAR Name:I_NEnde_A7Offset
+LOK_VAR Name:I_Index
+LOK_VAR Name:I_Index_P
+LOK_VAR Name:I_Index_V
+LOK_VAR Name:I_Index_Satz
+LOK_VAR Name:I_PosNr
+LOK_VAR Name:R_Temp
+LOK_VAR Name:R_Temp2
+LOK_VAR Name:I_A7_Bei_X0
+LOK_VAR Name:R_Laenge
+LOK_VAR Name:R_X
+LOK_VAR Name:R_Y
+LOK_VAR Name:R_Z
+LOK_VAR Name:R_Korr
+LOK_VAR Name:S_Marke(15)
+LOK_VAR Name:S_Satz(100)
+LOK_VAR Name:S_1(30)
+LOK_VAR Name:S_2(2)
+LOK_VAR Name:S_3(50)
+LOK_VAR Name:S_Index(4)
+LOK_VAR Name:S_Temp(30)
+LOK_VAR Name:I_Schritt
+LOK_KONST Name:S#win2(23),Wert:"\WR\WC38\WL16\WY02\WX02"
+C 
+C -- genauen Wert am Rob ermitteln ---
+KOPIERE Quelle:30,Ziel_Var:I_VStart_A7Offset
+KOPIERE Quelle:30,Ziel_Var:I_NEnde_A7Offset
+C -- seitl. Offset fuer Naehte bei X=0
+C -- nicht mehr, damit 15m auf Tisch erreicht werden ---
+KOPIERE Quelle:1750,Ziel_Var:I_A7_Bei_X0
+\KOPIERE Quelle:800,Ziel_Var:I_A7_Bei_X0
+\KOPIERE Quelle:1,Ziel_Var:ISchritt_Nr
+C  -- pozniej bedzie podane --
+C 
+KOPIERE Quelle:"VAR_POS Variable:PPos_Auto[",Ziel_Var:S_1
+KOPIERE Quelle:"]",Ziel_Var:S_2
+KOPIERE Quelle:"RELATIV_TOOL Vektor:VTOOL_AUTO[",Ziel_Var:S_3
+C 
+BEWEG_ART #PTP
+U_PROG Name:"S:/PROG/PTP_100"
+ACHSE_7 #PASSIV
+RELATIV Vektor:_vnull
+RELATIV_TOOL Vektor:_vnull
+UEBERSCHL #EIN
+C 
+WARTEZEIT [s]:0.1000
+WERKZEUG Variable:TBEO
+POSITION #N,ABEKING,X:1959.89,Y:1318.90,Z:1556.37,A:-90.0031,B:0.0000,C:0.0000,A1:1.2048,A2:-92.4643,A3:99.3447,A4:-89.9985,A5:83.1183,A6:36.0079,A7:2741.9997,Version:14,T_x:1.47,T_y:-0.40,T_z:12.00,T_RA:-34.8000,T_RB:0.0000,T_RC:-180.0000,MRF_x:0.00,MRF_y:0.00,MRF_z:0.00,MRF_RA:0.0000,MRF_RB:-0.0000,MRF_RC:-0.0000
+C -- Position mittig ueber Bauteil  ---
+IST_POS Variable:P_UebergabeHomePos,#N,Frame:27
+VAR_POS Variable:P_UebergabeHomePos
+C --- Positionen berechnen ------
+KOPIERE Quelle:"M1",Ziel_Var:S_Marke
+SPRUNG Marke:"Pos"
+MARKE "M1"
+KOPIERE Quelle:I_PosNr,Ziel_Var:ITemp
+ADD Op_1:10,Ziel_Var:ITemp
+C --- alte Pos loeschen -----
+KOPIERE Quelle:"M6",Ziel_Var:S_Marke
+SPRUNG Marke:"loeschen"
+MARKE "M6"
+C ---- neue Pos schreiben ---
+TESTE #VARIABLE,Op_1:I_PosNr,#<=,Op_2:0,Marke:"S_ENDE"
+KOPIERE Quelle:70,Ziel_Var:I_Index_Satz
+MARKE "M2"
+HOLE_SATZ Prog_Name:"I_NAHT_BAHN",Satz:I_Index_Satz,Ziel_Var:S_Satz
+SUCHE_STR Quelle:S_Satz,Muster:"START_BER",Startindex:0,Optionen:1b,Ergebnis:I_Temp
+TESTE #VARIABLE,Op_1:I_Temp,#>,Op_2:0,Marke:"M2_"
+ADD Op_1:1,Ziel_Var:I_Index_Satz
+SPRUNG Marke:"M2"
+MARKE "M2_"
+KOPIERE Quelle:2,Ziel_Var:I_Index_P
+KOPIERE Quelle:12,Ziel_Var:I_Index_V
+MARKE "S_START"
+C --- POS ------
+NUM_STR Quelle:I_Index_V,Ziel:S_Index,Laenge:0,Nachkommast:0
+F S_Satz = S_3 + S_Index + S_2
+SCHREIBE_SATZ Quelle:S_Satz,Prog_Name:"I_NAHT_BAHN",Satz:I_Index_Satz
+ADD Op_1:1,Ziel_Var:I_Index_Satz
+NUM_STR Quelle:I_Index_P,Ziel:S_Index,Laenge:0,Nachkommast:0
+F S_Satz = S_1 + S_Index + S_2
+SCHREIBE_SATZ Quelle:S_Satz,Prog_Name:"I_NAHT_BAHN",Satz:I_Index_Satz
+ADD Op_1:1,Ziel_Var:I_Index_Satz
+SCHREIBE_SATZ Quelle:"VEKTOR_AUTO",Prog_Name:"I_NAHT_BAHN",Satz:I_Index_Satz
+ADD Op_1:1,Ziel_Var:I_Index_Satz
+C --------------
+ADD Op_1:1,Ziel_Var:I_Index_P
+ADD Op_1:1,Ziel_Var:I_Index_V
+TESTE #VARIABLE,Op_1:I_Index_P,#>,Op_2:I_PosNr,Marke:"S_ENDE"
+SPRUNG Marke:"S_START"
+MARKE "S_ENDE"
+C ------ VTOOL -korrekturen (z.B. drehung in Z )----
+KOPIERE Quelle:10,Ziel_Var:I_Index_V
+KOPIERE Quelle:0,Ziel_Var:I_Index_P
+MARKE "KORR_Start"
+ADD Op_1:1,Ziel_Var:I_Index_P
+ADD Op_1:1,Ziel_Var:I_Index_V
+ADD Op_1:IDrehung_Z[ISchritt_Nr],Ziel_Var:VTOOL_AUTO[I_Index_V].A
+TESTE #VARIABLE,Op_1:I_Index_P,#<=,Op_2:I_PosNr,Marke:"KORR_Start"
+ADD Op_1:IDrehung_Z[ISchritt_Nr],Ziel_Var:VTOOL_AUTO[99].A
+C 
+C ------------ Hauptprogramm   -----------
+MARKE "Naht"
+U_PROG Name:"I_NAHT_BAHN"
+TESTE #VARIABLE,Op_1:I-TeachMode,#=,Op_2:2,Marke:"Pruf"
+TESTE #VARIABLE,Op_1:I-TeachMode,#=,Op_2:1,Marke:"Naht_"
+C --- Prfung ---
+NAHT-OK
+TESTE #VARIABLE,Op_1:ITaste,#=,Op_2:0,Marke:"Naht_"
+SPRUNG Marke:"Naht"
+C -- nach Naht ---
+MARKE "Pruf"
+\U_PROG Name:"PRUFUNG"
+MARKE "Naht_"
+KOPIERE Quelle:"M5",Ziel_Var:S_Marke
+SPRUNG Marke:"loeschen"
+MARKE "M5"
+SPRUNG Marke:"Ende"
+C - --------------------------------------
+MARKE "Pos"
+C -- Richtung auslesen ---
+F I_Nahtlaenge = INaht_X_E[ISchritt_Nr] - INaht_X_A[ISchritt_Nr]
+KOPIERE Quelle:I_NahtLaenge,Ziel_Var:I_Temp
+BETRAG Variable:I_Temp
+TESTE #VARIABLE,Op_1:I_Temp,#<,Op_2:10,Marke:"horizontal"
+TESTE #VARIABLE,Op_1:I_Nahtlaenge,#<,Op_2:0,Marke:"nach_unten"
+C -- vertikale Naht nach oben ---
+TESTE #VARIABLE,Op_1:INaht_Y_E[ISchritt_Nr],#>,Op_2:-100,Marke:"VO_Y_OK2"
+KOPIERE Quelle:-1700,Ziel_Var:I_A7_Bei_X0
+MARKE "VO_Y_OK2"
+C --- wenn xa >1600
+TESTE #VARIABLE,Op_1:INaht_X_A[ISchritt_Nr],#<,Op_2:1400,Marke:"VO_X_OK"
+KOPIERE Quelle:700,Ziel_Var:I_A7_Bei_X0
+TESTE #VARIABLE,Op_1:INaht_Y_E[ISchritt_Nr],#>,Op_2:-500,Marke:"VO_Y_OK"
+KOPIERE Quelle:-700,Ziel_Var:I_A7_Bei_X0
+MARKE "VO_Y_OK"
+MARKE "VO_X_OK"
+C --  PAnfahr_Auto --
+KOPIERE Quelle:P_UebergabeHomePos,Ziel_Var:PAnfahr_Auto
+KOPIERE Quelle:0.0000,Ziel_Var:PAnfahr_Auto.A
+KOPIERE Quelle:INaht_X_A[ISchritt_Nr],Ziel_Var:PAnfahr_Auto.X
+KOPIERE Quelle:INaht_Y_A[ISchritt_Nr],Ziel_Var:PAnfahr_Auto.Y
+SUB Op_1:20,Ziel_Var:PAnfahr_Auto.X
+KOPIERE Quelle:700,Ziel_Var:PAnfahr_Auto.Z
+ADD Op_1:VREF_POS_Auto.X,Ziel_Var:PAnfahr_Auto.X
+ADD Op_1:VREF_POS_Auto.Y,Ziel_Var:PAnfahr_Auto.Y
+ADD Op_1:VREF_POS_Auto.Z,Ziel_Var:PAnfahr_Auto.Z
+C -- je nach Abstand anderen A7-Abstand waehlen ---
+F PAnfahr_Auto.A7 = PAnfahr_Auto.Y - I_A7_Bei_X0 + RA7Pos_L[1]
+C -- P_VVStart --
+KOPIERE Quelle:PAnfahr_Auto,Ziel_Var:PVVStart_Auto
+F PVVStart_Auto.Z= VREF_POS_Auto.Z+30+IBlechDicke
+C -- P_VorStart ---
+KOPIERE Quelle:PVVStart_Auto,Ziel_Var:PVorStart_Auto
+F PVorStart_Auto.Z= VREF_POS_Auto.Z+IBlechDicke
+C -- P_Start ----
+KOPIERE Quelle:PVorStart_Auto,Ziel_Var:PStart_Auto
+ADD Op_1:20,Ziel_Var:PStart_Auto.X
+C -- P_NStart ---
+KOPIERE Quelle:PStart_Auto,Ziel_Var:PPos_Auto[1]
+ADD Op_1:20,Ziel_Var:PPos_Auto[1].X
+F I_Laenge=I_Nahtlaenge-40
+KOPIERE Quelle:I_Laenge,Ziel_Var:R_Laenge
+F R_Temp= R_Laenge / IV_Abs[ISchritt_Nr]
+ADD Op_1:0.5000,Ziel_Var:R_Temp
+KOPIERE Quelle:R_Temp,Ziel_Var:I_PosNr
+KOPIERE Quelle:I_Laenge,Ziel_Var:I_Temp
+MODULO Op_1:IV_Abs[ISchritt_Nr],Ziel_Var:I_Temp
+TESTE #VARIABLE,Op_1:I_Temp,#>,Op_2:60,Marke:"Abstand"
+SUB Op_1:1,Ziel_Var:I_PosNr
+MARKE "Abstand"
+C --
+C -- Pos 2......N (I_PosNr) ------
+KOPIERE Quelle:2,Ziel_Var:I_Index
+KOPIERE Quelle:PPos_Auto[1].X,Ziel_Var:R_Temp
+C ----------------
+MARKE "S1"
+ADD Op_1:IV_Abs[ISchritt_Nr],Ziel_Var:R_Temp
+KOPIERE Quelle:PStart_Auto,Ziel_Var:PPos_Auto[I_Index]
+KOPIERE Quelle:R_Temp,Ziel_Var:PPos_Auto[I_Index].X
+ADD Op_1:1,Ziel_Var:I_Index
+TESTE #VARIABLE,Op_1:I_Index,#>,Op_2:I_PosNr,Marke:"S1_"
+SPRUNG Marke:"S1"
+MARKE "S1_"
+C ----------------
+C --- P_ProzEnde ---
+KOPIERE Quelle:PStart_Auto,Ziel_Var:PProzEnde_Auto
+KOPIERE Quelle:INaht_X_E[ISchritt_Nr],Ziel_Var:PProzEnde_Auto.X
+C -- P_Pos vor Ende ----
+KOPIERE Quelle:PProzEnde_Auto,Ziel_Var:PPos_Auto[99]
+SUB Op_1:20,Ziel_Var:PPos_Auto[99].X
+C --- P_NachEnde ---
+KOPIERE Quelle:PProzEnde_Auto,Ziel_Var:PNachEnde_Auto
+ADD Op_1:20,Ziel_Var:PNachEnde_Auto.X
+C --- P_WegFahr ---
+KOPIERE Quelle:PNachEnde_Auto,Ziel_Var:PWegFahr_Auto
+ADD Op_1:200,Ziel_Var:PWegFahr_Auto.Z
+C ------- T-Stoss berechnen ---
+SPRUNG Marke:"M8"
+MARKE "nach_unten"
+C -- vertikale Naht nach unten
+TESTE #VARIABLE,Op_1:INaht_Y_E[ISchritt_Nr],#>,Op_2:-100,Marke:"VU_Y_OK2"
+KOPIERE Quelle:-1700,Ziel_Var:I_A7_Bei_X0
+MARKE "VU_Y_OK2"
+TESTE #VARIABLE,Op_1:INaht_X_E[ISchritt_Nr],#<,Op_2:1400,Marke:"VU_X_OK"
+KOPIERE Quelle:700,Ziel_Var:I_A7_Bei_X0
+TESTE #VARIABLE,Op_1:INaht_Y_E[ISchritt_Nr],#>,Op_2:-500,Marke:"VU_Y_OK"
+KOPIERE Quelle:-700,Ziel_Var:I_A7_Bei_X0
+MARKE "VU_Y_OK"
+MARKE "VU_X_OK"
+C --  PAnfahr_Auto --
+KOPIERE Quelle:P_UebergabeHomePos,Ziel_Var:PAnfahr_Auto
+KOPIERE Quelle:180.0000,Ziel_Var:PAnfahr_Auto.A
+KOPIERE Quelle:INaht_X_A[ISchritt_Nr],Ziel_Var:PAnfahr_Auto.X
+KOPIERE Quelle:INaht_Y_A[ISchritt_Nr],Ziel_Var:PAnfahr_Auto.Y
+ADD Op_1:20,Ziel_Var:PAnfahr_Auto.X
+KOPIERE Quelle:700,Ziel_Var:PAnfahr_Auto.Z
+ADD Op_1:VREF_POS_Auto.X,Ziel_Var:PAnfahr_Auto.X
+ADD Op_1:VREF_POS_Auto.Y,Ziel_Var:PAnfahr_Auto.Y
+ADD Op_1:VREF_POS_Auto.Z,Ziel_Var:PAnfahr_Auto.Z
+C -- je nach Abstand anderen A7-Abstand waehlen ---
+F PAnfahr_Auto.A7 = PAnfahr_Auto.Y - I_A7_Bei_X0 + RA7Pos_L[1]
+C -- P_VVStart --
+KOPIERE Quelle:PAnfahr_Auto,Ziel_Var:PVVStart_Auto
+F PVVStart_Auto.Z= VREF_POS_AUTO.Z+30+IBlechDicke
+C -- P_VorStart ---
+KOPIERE Quelle:PVVStart_Auto,Ziel_Var:PVorStart_Auto
+F PVorStart_Auto.Z= VREF_POS_Auto.Z+IBlechDicke
+C -- P_Start ----
+KOPIERE Quelle:PVorStart_Auto,Ziel_Var:PStart_Auto
+KOPIERE Quelle:INaht_X_A[ISchritt_Nr],Ziel_Var:PStart_Auto.X
+C -- P_NStart ---
+KOPIERE Quelle:PStart_Auto,Ziel_Var:PPos_Auto[1]
+SUB Op_1:20,Ziel_Var:PPos_Auto[1].X
+NEG Variable:I_Nahtlaenge
+F I_Laenge=I_Nahtlaenge-40
+KOPIERE Quelle:I_Laenge,Ziel_Var:R_Laenge
+F R_Temp= R_Laenge / IV_Abs[ISchritt_Nr]
+ADD Op_1:0.5000,Ziel_Var:R_Temp
+KOPIERE Quelle:R_Temp,Ziel_Var:I_PosNr
+KOPIERE Quelle:I_Laenge,Ziel_Var:I_Temp
+MODULO Op_1:IV_Abs[ISchritt_Nr],Ziel_Var:I_Temp
+TESTE #VARIABLE,Op_1:I_Temp,#>,Op_2:60,Marke:"Abstand2"
+SUB Op_1:1,Ziel_Var:I_PosNr
+MARKE "Abstand2"
+C -- Pos 2......N (I_PosNr) ------
+KOPIERE Quelle:2,Ziel_Var:I_Index
+KOPIERE Quelle:PPos_Auto[1].X,Ziel_Var:R_Temp
+C ----------------
+MARKE "S2"
+SUB Op_1:IV_Abs[ISchritt_Nr],Ziel_Var:R_Temp
+KOPIERE Quelle:PStart_Auto,Ziel_Var:PPos_Auto[I_Index]
+KOPIERE Quelle:R_Temp,Ziel_Var:PPos_Auto[I_Index].X
+ADD Op_1:1,Ziel_Var:I_Index
+TESTE #VARIABLE,Op_1:I_Index,#>,Op_2:I_PosNr,Marke:"S2_"
+SPRUNG Marke:"S2"
+MARKE "S2_"
+C ----------------
+C --- P_ProzEnde ---
+KOPIERE Quelle:PStart_Auto,Ziel_Var:PProzEnde_Auto
+KOPIERE Quelle:INaht_X_E[ISchritt_Nr],Ziel_Var:PProzEnde_Auto.X
+C -- P_Pos vor Ende ----
+KOPIERE Quelle:PProzEnde_Auto,Ziel_Var:PPos_Auto[99]
+ADD Op_1:20,Ziel_Var:PPos_Auto[99].X
+C --- P_NachEnde ---
+KOPIERE Quelle:PProzEnde_Auto,Ziel_Var:PNachEnde_Auto
+SUB Op_1:20,Ziel_Var:PNachEnde_Auto.X
+C --- P_WegFahr ---
+KOPIERE Quelle:PNachEnde_Auto,Ziel_Var:PWegFahr_Auto
+ADD Op_1:200,Ziel_Var:PWegFahr_Auto.Z
+KOPIERE Quelle:-90,Ziel_Var:PWegFahr_Auto.A
+C ------- T-Stoss berechnen ---
+SPRUNG Marke:"M8"
+MARKE "horizontal"
+F I_Nahtlaenge = INaht_Y_E[ISchritt_Nr] - INaht_Y_A[ISchritt_Nr]
+TESTE #VARIABLE,Op_1:I_Nahtlaenge,#>,Op_2:0,Marke:"nach_links"
+C -- horizontale Naht nach rechts ----
+\STOP
+\KOPIERE Quelle:0,Ziel_Var:I_A7_Bei_X0
+C --- wenn x a <2500
+TESTE #VARIABLE,Op_1:INaht_X_A[ISchritt_Nr],#>=,Op_2:2500,Marke:"XPos_OK_2"
+KOPIERE Quelle:1500,Ziel_Var:I_A7_Bei_X0
+C --- wenn y ende <-1600
+TESTE #VARIABLE,Op_1:INaht_Y_E[ISchritt_Nr],#>=,Op_2:0,Marke:"YPos_OK"
+KOPIERE Quelle:-1500,Ziel_Var:I_A7_Bei_X0
+MARKE "YPos_OK"
+MARKE "XPos_OK_2"
+TESTE #VARIABLE,Op_1:INaht_Y_A[ISchritt_Nr],#<=,Op_2:17500,Marke:"YPos_OK_2"
+KOPIERE Quelle:1500,Ziel_Var:I_A7_Bei_X0
+MARKE "YPos_Ok_2"
+C --  PAnfahr_Auto --
+KOPIERE Quelle:P_UebergabeHomePos,Ziel_Var:PAnfahr_Auto
+KOPIERE Quelle:INaht_X_A[ISchritt_Nr],Ziel_Var:PAnfahr_Auto.X
+KOPIERE Quelle:INaht_Y_A[ISchritt_Nr],Ziel_Var:PAnfahr_Auto.Y
+ADD Op_1:20,Ziel_Var:PAnfahr_Auto.Y
+KOPIERE Quelle:600,Ziel_Var:PAnfahr_Auto.Z
+\KOPIERE Quelle:150,Ziel_Var:PAnfahr_Auto.Z
+ADD Op_1:VREF_POS_Auto.X,Ziel_Var:PAnfahr_Auto.X
+ADD Op_1:VREF_POS_Auto.Y,Ziel_Var:PAnfahr_Auto.Y
+ADD Op_1:VREF_POS_Auto.Z,Ziel_Var:PAnfahr_Auto.Z
+C -- je nach Abstand anderen A7-Abstand waehlen ---
+F PAnfahr_Auto.A7 = PAnfahr_Auto.Y - I_A7_Bei_X0 + RA7Pos_L[1]
+C -- PAnfahr_Auto2 ---
+KOPIERE Quelle:PAnfahr_Auto,Ziel_Var:PAnfahr2_Auto
+F PAnfahr2_Auto.Z= VREF_POS_Auto.Z + IBlechDicke + 100
+C -- P_VVStart --
+KOPIERE Quelle:PAnfahr2_Auto,Ziel_Var:PVVStart_Auto
+F PVVStart_Auto.Z= VREF_POS_Auto.Z + IBlechDicke + 15
+C -- P_VorStart ---
+KOPIERE Quelle:PVVStart_Auto,Ziel_Var:PVorStart_Auto
+F PVorStart_Auto.Z= VREF_POS_Auto.Z + IBlechDicke
+C -- P_Start ----
+KOPIERE Quelle:PVorStart_Auto,Ziel_Var:PStart_Auto
+SUB Op_1:20,Ziel_Var:PStart_Auto.Y
+F PStart_Auto.A7 = PStart_Auto.Y - I_A7_Bei_X0 + RA7Pos_L[1]
+C ----------------
+C -- P_NStart ---
+KOPIERE Quelle:PStart_Auto,Ziel_Var:PPos_Auto[1]
+SUB Op_1:20,Ziel_Var:PPos_Auto[1].Y
+SUB Op_1:20,Ziel_Var:PPos_Auto[1].A7
+BETRAG Variable:I_Nahtlaenge
+F I_Laenge=I_Nahtlaenge-40
+KOPIERE Quelle:I_Laenge,Ziel_Var:R_Laenge
+F R_Temp= R_Laenge / IV_Abs[ISchritt_Nr]
+ADD Op_1:0.5000,Ziel_Var:R_Temp
+KOPIERE Quelle:R_Temp,Ziel_Var:I_PosNr
+KOPIERE Quelle:I_Laenge,Ziel_Var:I_Temp
+MODULO Op_1:IV_Abs[ISchritt_Nr],Ziel_Var:I_Temp
+TESTE #VARIABLE,Op_1:I_Temp,#>,Op_2:60,Marke:"Abstand4"
+SUB Op_1:1,Ziel_Var:I_PosNr
+MARKE "Abstand4"
+C -- Pos 2......N (I_PosNr) ------
+KOPIERE Quelle:2,Ziel_Var:I_Index
+KOPIERE Quelle:PPos_Auto[1].Y,Ziel_Var:R_Temp
+KOPIERE Quelle:PPos_Auto[1].A7,Ziel_Var:R_Temp2
+C ----------------
+MARKE "S4"
+SUB Op_1:IV_Abs[ISchritt_Nr],Ziel_Var:R_Temp
+SUB Op_1:IV_Abs[ISchritt_Nr],Ziel_Var:R_Temp2
+KOPIERE Quelle:PStart_Auto,Ziel_Var:PPos_Auto[I_Index]
+KOPIERE Quelle:R_Temp,Ziel_Var:PPos_Auto[I_Index].Y
+KOPIERE Quelle:R_Temp2,Ziel_Var:PPos_Auto[I_Index].A7
+ADD Op_1:1,Ziel_Var:I_Index
+TESTE #VARIABLE,Op_1:I_Index,#>,Op_2:I_PosNr,Marke:"S4_"
+SPRUNG Marke:"S4"
+MARKE "S4_"
+C ----------------
+C --- P_ProzEnde ---
+KOPIERE Quelle:PStart_Auto,Ziel_Var:PProzEnde_Auto
+F PProzEnde_Auto.Y = INaht_Y_E[ISchritt_Nr] + VREF_POS_Auto.Y
+F PProzEnde_Auto.A7 = PProzEnde_Auto.Y - I_A7_Bei_X0 + RA7Pos_L[1]
+C --- P_Pos vor Ende -----
+KOPIERE Quelle:PProzEnde_Auto,Ziel_Var:PPos_Auto[99]
+ADD Op_1:20,Ziel_Var:PPos_Auto[99].Y
+ADD Op_1:20,Ziel_Var:PPos_Auto[99].A7
+C --- P_NachEnde ---
+KOPIERE Quelle:PProzEnde_Auto,Ziel_Var:PNachEnde_Auto
+\ADD Op_1:10,Ziel_Var:PNachEnde_Auto.Z
+SUB Op_1:30,Ziel_Var:PNachEnde_Auto.Y
+SUB Op_1:30,Ziel_Var:PNachEnde_Auto.Y
+C --- P_WegFahr ---
+KOPIERE Quelle:PNachEnde_Auto,Ziel_Var:PWegFahr_Auto
+ADD Op_1:100,Ziel_Var:PWegFahr_Auto.Z
+C --- P_WegFahr2 ---
+KOPIERE Quelle:PWegFahr_Auto,Ziel_Var:PWegFahr2_Auto
+ADD Op_1:400,Ziel_Var:PWegFahr2_Auto.Z
+C ------- T-Stoss berechnen ---
+SPRUNG Marke:"M7"
+C -----------------------------
+MARKE "nach_links"
+KOPIERE Quelle:0,Ziel_Var:I_A7_Bei_X0
+C --- a7 Stellung wenn x >>><<<
+TESTE #VARIABLE,Op_1:INaht_X_A[ISchritt_Nr],#>=,Op_2:2500,Marke:"XPos_OK"
+KOPIERE Quelle:1500,Ziel_Var:I_A7_Bei_X0
+TESTE #VARIABLE,Op_1:INaht_X_A[ISchritt_Nr],#>=,Op_2:1300,Marke:"XPos_OK"
+KOPIERE Quelle:2000,Ziel_Var:I_A7_Bei_X0
+C --- A7 Stellung wenn y >>>><<<<<
+TESTE #VARIABLE,Op_1:INaht_Y_A[ISchritt_Nr],#>=,Op_2:0,Marke:"YLA_OK"
+KOPIERE Quelle:-1500,Ziel_Var:I_A7_Bei_X0
+MARKE "YLA_OK"
+MARKE "XPos_OK"
+TESTE #VARIABLE,Op_1:INaht_Y_E[ISchritt_Nr],#<=,Op_2:17500,Marke:"YLE_OK"
+KOPIERE Quelle:1500,Ziel_Var:I_A7_Bei_X0
+MARKE "YLE_OK"
+C --  PAnfahr_Auto --
+KOPIERE Quelle:P_UebergabeHomePos,Ziel_Var:PAnfahr_Auto
+KOPIERE Quelle:180.0000,Ziel_Var:PAnfahr_Auto.A
+KOPIERE Quelle:INaht_X_A[ISchritt_Nr],Ziel_Var:PAnfahr_Auto.X
+KOPIERE Quelle:INaht_Y_A[ISchritt_Nr],Ziel_Var:PAnfahr_Auto.Y
+SUB Op_1:20,Ziel_Var:PAnfahr_Auto.Y
+KOPIERE Quelle:700,Ziel_Var:PAnfahr_Auto.Z
+ADD Op_1:VREF_POS_Auto.X,Ziel_Var:PAnfahr_Auto.X
+ADD Op_1:VREF_POS_Auto.Y,Ziel_Var:PAnfahr_Auto.Y
+ADD Op_1:VREF_POS_Auto.Z,Ziel_Var:PAnfahr_Auto.Z
+C -- je nach Abstand anderen A7-Abstand waehlen ---
+F PAnfahr_Auto.A7 = PAnfahr_Auto.Y - I_A7_Bei_X0 + RA7Pos_L[1]
+C -- P_VVStart --
+KOPIERE Quelle:PAnfahr_Auto,Ziel_Var:PVVStart_Auto
+F PVVStart_Auto.Z= VREF_POS_Auto.Z + IBlechDicke+ 30
+KOPIERE Quelle:90.0000,Ziel_Var:PVVStart_Auto.A
+C -- P_VorStart ---
+KOPIERE Quelle:PVVStart_Auto,Ziel_Var:PVorStart_Auto
+SUB Op_1:30,Ziel_Var:PVorStart_Auto.Z
+C -- P_Start ----
+KOPIERE Quelle:PVorStart_Auto,Ziel_Var:PStart_Auto
+ADD Op_1:20,Ziel_Var:PStart_Auto.Y
+F PStart_Auto.A7 = PStart_Auto.Y - I_A7_Bei_X0 + RA7Pos_L[1]
+C ----------------
+C -- P_NStart ---
+KOPIERE Quelle:PStart_Auto,Ziel_Var:PPos_Auto[1]
+ADD Op_1:20,Ziel_Var:PPos_Auto[1].Y
+ADD Op_1:20,Ziel_Var:PPos_Auto[1].A7
+BETRAG Variable:I_Nahtlaenge
+F I_Laenge=I_Nahtlaenge-40
+KOPIERE Quelle:I_Laenge,Ziel_Var:R_Laenge
+F R_Temp= R_Laenge / IV_Abs[ISchritt_Nr]
+ADD Op_1:0.5000,Ziel_Var:R_Temp
+KOPIERE Quelle:R_Temp,Ziel_Var:I_PosNr
+KOPIERE Quelle:I_Laenge,Ziel_Var:I_Temp
+MODULO Op_1:IV_Abs[ISchritt_Nr],Ziel_Var:I_Temp
+TESTE #VARIABLE,Op_1:I_Temp,#>,Op_2:60,Marke:"Abstand3"
+SUB Op_1:1,Ziel_Var:I_PosNr
+MARKE "Abstand3"
+C -- Pos 2......N (I_PosNr) ------
+KOPIERE Quelle:2,Ziel_Var:I_Index
+KOPIERE Quelle:PPos_Auto[1].Y,Ziel_Var:R_Temp
+KOPIERE Quelle:PPos_Auto[1].A7,Ziel_Var:R_Temp2
+C ----------------
+MARKE "S3"
+ADD Op_1:IV_Abs[ISchritt_Nr],Ziel_Var:R_Temp
+ADD Op_1:IV_Abs[ISchritt_Nr],Ziel_Var:R_Temp2
+KOPIERE Quelle:PStart_Auto,Ziel_Var:PPos_Auto[I_Index]
+KOPIERE Quelle:R_Temp,Ziel_Var:PPos_Auto[I_Index].Y
+KOPIERE Quelle:R_Temp2,Ziel_Var:PPos_Auto[I_Index].A7
+ADD Op_1:1,Ziel_Var:I_Index
+TESTE #VARIABLE,Op_1:I_Index,#>,Op_2:I_PosNr,Marke:"S3_"
+SPRUNG Marke:"S3"
+MARKE "S3_"
+C ----------------
+C --- P_ProzEnde ---
+KOPIERE Quelle:PStart_Auto,Ziel_Var:PProzEnde_Auto
+F PProzEnde_Auto.Y = INaht_Y_E[ISchritt_Nr] + VREF_POS_Auto.Y
+F PProzEnde_Auto.A7 = PProzEnde_Auto.Y - I_A7_Bei_X0 + RA7Pos_L[1]
+C -- P_Pos vor Ende ----
+\ADD Op_1:1,Ziel_Var:I_PosNr
+KOPIERE Quelle:PProzEnde_Auto,Ziel_Var:PPos_Auto[99]
+SUB Op_1:20,Ziel_Var:PPos_Auto[99].Y
+SUB Op_1:20,Ziel_Var:PPos_Auto[99].A7
+C --- P_NachEnde ---
+KOPIERE Quelle:PProzEnde_Auto,Ziel_Var:PNachEnde_Auto
+ADD Op_1:30,Ziel_Var:PNachEnde_Auto.Y
+ADD Op_1:30,Ziel_Var:PNachEnde_Auto.A7
+C --- P_WegFahr ---
+KOPIERE Quelle:PNachEnde_Auto,Ziel_Var:PWegFahr_Auto
+ADD Op_1:200,Ziel_Var:PWegFahr_Auto.Z
+KOPIERE Quelle:180.0000,Ziel_Var:PWegFahr_Auto.A
+C ------- T-Stoss berechnen ---
+SPRUNG Marke:"M7"
+MARKE "richtung_"
+MARKE "loeschen"
+C -- wenn fertig alles l”schen ---
+KOPIERE Quelle:70,Ziel_Var:I_Index_Satz
+MARKE "M3"
+HOLE_SATZ Prog_Name:"I_NAHT_BAHN",Satz:I_Index_Satz,Ziel_Var:S_Satz
+SUCHE_STR Quelle:S_Satz,Muster:"START_BER",Startindex:0,Optionen:1b,Ergebnis:I_Temp
+TESTE #VARIABLE,Op_1:I_Temp,#>,Op_2:0,Marke:"M3_"
+ADD Op_1:1,Ziel_Var:I_Index_Satz
+SPRUNG Marke:"M3"
+MARKE "M3_"
+ADD Op_1:1,Ziel_Var:I_Index_Satz
+MARKE "M4"
+HOLE_SATZ Prog_Name:"I_NAHT_BAHN",Satz:I_Index_Satz,Ziel_Var:S_Satz
+SUCHE_STR Quelle:S_Satz,Muster:"ENDE_BER",Startindex:0,Optionen:1b,Ergebnis:I_Temp
+TESTE #VARIABLE,Op_1:I_Temp,#>,Op_2:0,Marke:"M4_"
+\ADD Op_1:1,Ziel_Var:I_Index_Satz
+LOESCHE_SATZ Prog_Name:"I_NAHT_BAHN",Satz:I_Index_Satz
+SPRUNG Marke:"M4"
+MARKE "M4_"
+SPRUNG Marke:S_Marke
+C --- T-Stoss Berechnung -----
+MARKE "M7"
+C ---- bei horizontaler Naht ---
+TESTE #VARIABLE,Op_1:ITStart[ISchritt_Nr],#=,Op_2:0,Marke:"TEnde_H"
+C --- Korrektur berechnen  ----
+KOPIERE Quelle:ITStart[ISchritt_Nr],Ziel_Var:I_Temp
+KOPIERE Quelle:ITStart_Naht[ISchritt_Nr],Ziel_Var:I_Schritt
+KOPIERE Quelle:"M10",Ziel_Var:S_Marke
+SPRUNG Marke:"M9"
+MARKE "M10"
+TESTE #VARIABLE,Op_1:ITStart[ISchritt_Nr],#>,Op_2:0,Marke:"Start_V_O"
+C ---- V_U ------
+SUB Op_1:R_Korr,Ziel_Var:PStart_Auto.Y
+SPRUNG Marke:"TEnde_H"
+C ---- V_O ------
+MARKE "Start_V_O"
+ADD Op_1:R_Korr,Ziel_Var:PStart_Auto.Y
+MARKE "TEnde_H"
+TESTE #VARIABLE,Op_1:ITEnde[ISchritt_Nr],#=,Op_2:0,Marke:"M1"
+C --- Korrektur berechnen  ----
+KOPIERE Quelle:ITEnde[ISchritt_Nr],Ziel_Var:I_Temp
+KOPIERE Quelle:ITEnde_Naht[ISchritt_Nr],Ziel_Var:I_Schritt
+KOPIERE Quelle:"M11",Ziel_Var:S_Marke
+SPRUNG Marke:"M9"
+MARKE "M11"
+TESTE #VARIABLE,Op_1:ITEnde[ISchritt_Nr],#>,Op_2:0,Marke:"Ende_V_O"
+C ---- V_U ------
+SUB Op_1:R_Korr,Ziel_Var:PProzEnde_Auto.Y
+SPRUNG Marke:"M1"
+C ---- V_O ------
+MARKE "Ende_V_O"
+ADD Op_1:R_Korr,Ziel_Var:PProzEnde_Auto.Y
+SPRUNG Marke:"M1"
+MARKE "M8"
+C ---- bei vertikaler Naht ---
+TESTE #VARIABLE,Op_1:ITStart[ISchritt_Nr],#=,Op_2:0,Marke:"TEnde_V"
+C --- Korrektur berechnen  ----
+KOPIERE Quelle:ITStart[ISchritt_Nr],Ziel_Var:I_Temp
+KOPIERE Quelle:ITStart_Naht[ISchritt_Nr],Ziel_Var:I_Schritt
+KOPIERE Quelle:"M12",Ziel_Var:S_Marke
+SPRUNG Marke:"M9"
+MARKE "M12"
+TESTE #VARIABLE,Op_1:ITStart[ISchritt_Nr],#>,Op_2:0,Marke:"Start_H_L"
+C ---- H_R ------
+ADD Op_1:R_Korr,Ziel_Var:PStart_Auto.X
+SPRUNG Marke:"TEnde_V"
+C ---- H_L ------
+MARKE "Start_H_L"
+SUB Op_1:R_Korr,Ziel_Var:PStart_Auto.X
+MARKE "TEnde_V"
+TESTE #VARIABLE,Op_1:ITEnde[ISchritt_Nr],#=,Op_2:0,Marke:"M1"
+C --- Korrektur berechnen  ----
+KOPIERE Quelle:ITStart[ISchritt_Nr],Ziel_Var:I_Temp
+KOPIERE Quelle:ITEnde_Naht[ISchritt_Nr],Ziel_Var:I_Schritt
+KOPIERE Quelle:"M13",Ziel_Var:S_Marke
+SPRUNG Marke:"M9"
+MARKE "M13"
+TESTE #VARIABLE,Op_1:ITEnde[ISchritt_Nr],#>,Op_2:0,Marke:"Ende_H_L"
+C ---- H_R ------
+ADD Op_1:R_Korr,Ziel_Var:PProzEnde_Auto.X
+SPRUNG Marke:"M1"
+C ---- H_L ------
+MARKE "Ende_H_L"
+SUB Op_1:R_Korr,Ziel_Var:PProzEnde_Auto.X
+SPRUNG Marke:"M1"
+MARKE "M9"
+\KOPIERE Quelle:615,Ziel_Var:I_Temp
+BETRAG Variable:I_Temp
+SUB Op_1:20,Ziel_Var:I_Temp
+KOPIERE Quelle:I_Temp,Ziel_Var:R_Laenge
+DIV Op_1:IV_Abs[ISchritt_Nr],Ziel_Var:R_Laenge
+KOPIERE Quelle:R_Laenge,Ziel_Var:I_Temp
+SUB Op_1:I_Temp,Ziel_Var:R_Laenge
+TESTE #VARIABLE,Op_1:R_Laenge,#<=,Op_2:0.5000,Marke:"_Add"
+ADD Op_1:1,Ziel_Var:I_Temp
+MARKE "_Add"
+TESTE #VARIABLE,Op_1:IProg_Nr,#=,Op_2:5,Marke:"_korr"
+ADD Op_1:11,Ziel_Var:I_Temp
+KOPIERE Quelle:ISchritt_Nr,Ziel_Var:I_Temp2
+KOPIERE Quelle:I_Schritt,Ziel_Var:ISchritt_Nr
+KOPIERE Quelle:_VNULL,Ziel_Var:VTOOL_AUTO[*]
+U_PROG Name:"S:/FERTIGUNG/VERWALTUNG/LESE_KORR"
+KOPIERE Quelle:VTOOL_AUTO[I_Temp].Y,Ziel_Var:R_Korr
+KOPIERE Quelle:I_Temp2,Ziel_Var:ISchritt_Nr
+KOPIERE Quelle:_VNULL,Ziel_Var:VTOOL_AUTO[*]
+U_PROG Name:"S:/FERTIGUNG/VERWALTUNG/LESE_KORR"
+MARKE "_korr"
+SPRUNG Marke:S_Marke
+MARKE "Ende"
+END
